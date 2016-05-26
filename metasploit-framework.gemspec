@@ -71,6 +71,8 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'metasploit-model'
   # Needed for Meterpreter
   spec.add_runtime_dependency 'metasploit-payloads', '1.1.11'
+  # Needed for the next-generation POSIX Meterpreter
+  spec.add_runtime_dependency 'metasploit_payloads-mettle'
   # Needed by msfgui and other rpc components
   spec.add_runtime_dependency 'msgpack'
   # get list of network interfaces, like eth* from OS.
@@ -96,7 +98,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'patch_finder'
   # TimeZone info
   spec.add_runtime_dependency 'tzinfo-data'
-  
+
   # rb-readline doesn't work with Ruby Installer due to error with Fiddle:
   #   NoMethodError undefined method `dlopen' for Fiddle:Module
   unless Gem.win_platform?
