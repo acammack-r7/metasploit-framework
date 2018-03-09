@@ -29,15 +29,29 @@ def report_vuln(ip, name, **opts):
 
 
 def run(metadata, module_callback):
-    req = json.loads(os.read(0, 10000).decode("utf-8"))
-    if req['method'] == 'describe':
-        rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'response': metadata})
-    elif req['method'] == 'run':
-        args = req['params']
-        module_callback(args)
-        rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'response': {
-            'message': 'Module completed'
-        }})
+    global framework_mode
+    framework_mode = True
+
+    if len(sys.argv) > 1:
+        framework_mode = False
+        import argparse
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--command', help='command to run on the target')
+        for opt, props in metadata['options'].iteritems():
+            parser.add_argument('--' + opt, help=props['description'], default=props['default'])
+
+        args = parser.parse_args()
+        module_callback(vars(args))
+    else:
+        req = json.loads(os.read(0, 10000).decode("utf-8"))
+        if req['method'] == 'describe':
+            rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'response': metadata})
+        elif req['method'] == 'run':
+            args = req['params']
+            module_callback(args)
+            rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'response': {
+                'message': 'Module completed'
+            }})
 
 
 def report(kind, data):
