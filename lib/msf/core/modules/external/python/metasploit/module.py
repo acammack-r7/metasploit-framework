@@ -63,15 +63,39 @@ def report_vuln(ip, name, **opts):
     report('vuln', vuln)
 
 
-def run(metadata, module_callback):
+def run(metadata, module_callback, hard_check=None, soft_check=None):
     req = json.loads(os.read(0, 10000).decode("utf-8"))
+    callback = None
     if req['method'] == 'describe':
-        rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'result': metadata})
+        caps = []
+        if hard_check:
+            caps.append('hard_check')
+        if soft_check:
+            caps.append('soft_check')
+
+        meta = metadata.copy()
+        meta.update({'capabilities': caps})
+
+        rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'result': meta})
+    elif req['method'] == 'hard_check':
+        if hard_check:
+            callback = hard_check
+        else:
+            rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'error': {'code': -32601, 'message': 'Hard checks are not supported'}})
+    elif req['method'] == 'soft_check':
+        if soft_check:
+            callback = soft_check
+        else:
+            rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'error': {'code': -32601, 'message': 'Soft checks are not supported'}})
     elif req['method'] == 'run':
+        callback = module_callback
+
+    if callback:
         args = req['params']
-        module_callback(args)
+        ret = callback(args)
         rpc_send({'jsonrpc': '2.0', 'id': req['id'], 'result': {
-            'message': 'Module completed'
+            'message': 'Module completed',
+            'return': ret
         }})
 
 

@@ -1,5 +1,6 @@
 module Msf::Module::External
   include Msf::Auxiliary::Report
+  include Msf::Module::Auth
 
   def wait_status(mod)
     begin
@@ -10,8 +11,7 @@ module Msf::Module::External
         when :report
           process_report(m)
         when :reply
-          # we're done
-          break
+          return m.params['return']
         end
       end
     rescue Interrupt => e
@@ -83,6 +83,11 @@ module Msf::Module::External
       vuln[:refs] = self.references
 
       report_vuln(vuln)
+    when 'login'
+      # Required
+      cred = {user: data['user'], private: data['private']}
+
+      store_valid_credential(**cred)
     else
       print_warning "Skipping unrecognized report type #{m.params['type']}"
     end

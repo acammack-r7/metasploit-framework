@@ -25,6 +25,15 @@ class Msf::Modules::External::Bridge
     end
   end
 
+  def soft_check(datastore)
+    unless self.running
+      m = Msf::Modules::External::Message.new(:soft_check)
+      m.params = datastore.dup
+      send(m)
+      self.running = true
+    end
+  end
+
   def get_status
     if self.running || !self.messages.empty?
       m = receive_notification
@@ -135,10 +144,13 @@ class Msf::Modules::External::Bridge
           # stdout might have some buffered data left, so carry on
           if fds.include?(err) && !err.eof?
             errbuf = err.readpartial(4096)
+            $stderr.puts errbuf
             elog "Unexpected output running #{self.path}:\n#{errbuf}"
           end
           if fds.include? out
-            self.buf << out.readpartial(4096)
+            o = out.readpartial(4096)
+            $stderr.puts o
+            self.buf << o
           end
         end
       end
