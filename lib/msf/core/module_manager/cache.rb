@@ -170,6 +170,10 @@ module Msf::ModuleManager::Cache
           :parent_path => parent_path,
           :modification_time => module_metadata.mod_time
       }
+      module_metadata.aliases.each do |a|
+        self.aliases[a] = module_metadata.full_name
+      end
+      self.inv_aliases[module_metadata.full_name] = module_metadata.aliases unless module_metadata.aliases.empty?
 
       typed_module_set = module_set(type)
 
